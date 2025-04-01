@@ -1,167 +1,120 @@
+-- LoadingLib.lua (Đặt trong ServerScriptService hoặc một ModuleScript)
 local LoadingLib = {}
 
+-- Dịch vụ cần thiết trong Roblox
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
--- Tạo ScreenGui chung
-local ScreenGui
-local function getScreenGui()
-    if not ScreenGui then
-        ScreenGui = Instance.new("ScreenGui")
-        ScreenGui.Name = "LoadingGui"
-        ScreenGui.ResetOnSpawn = false
-        ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    end
-    return ScreenGui
-end
-
+-- Hàm tạo màn hình Loading
 function LoadingLib:CreateLoading(config)
-    local Title = config.Title or "Loading Script"
-    local Content = config.Content or "Loading..."
-    local Image = config.Image or "" -- URL của hình ảnh
+    -- Kiểm tra config và gán giá trị mặc định
+    config = config or {}
+    local title = config.Title or "Default Title"
+    local imageUrl = config.Image or "" -- URL hình ảnh
+    local scriptName = config.ScriptName or "Default Script"
 
-    local ScreenGui = getScreenGui()
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 300, 0, 120)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -60) -- Giữa màn hình
-    MainFrame.BackgroundTransparency = 0
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Nền đen
-    MainFrame.Parent = ScreenGui
+    -- Tạo ScreenGui cho từng người chơi
+    for _, player in pairs(Players:GetPlayers()) do
+        local playerGui = player:WaitForChild("PlayerGui")
 
-    -- Corner
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = MainFrame
+        -- Tạo ScreenGui
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "LoadingScreen"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = playerGui
 
-    -- Image (bên trái)
-    local Icon
-    if Image ~= "" then
-        Icon = Instance.new("ImageLabel")
-        Icon.Size = UDim2.new(0, 40, 0, 40)
-        Icon.Position = UDim2.new(0, 10, 0, 10)
-        Icon.BackgroundTransparency = 1
-        Icon.Image = Image -- Sử dụng URL hình ảnh
-        Icon.Parent = MainFrame
-    end
+        -- Tạo Frame chính (nền tối)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu nền tối
+        frame.BorderSizePixel = 0
+        frame.Parent = screenGui
 
-    -- Title (FINN HUB UI)
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(0, 240, 0, 20)
-    TitleLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 10)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "FINN HUB UI"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextScaled = true
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Font = Enum.Font.SourceSansBold
-    TitleLabel.Parent = MainFrame
+        -- Tạo ô hình ảnh
+        local imageLabel = Instance.new("ImageLabel")
+        imageLabel.Size = UDim2.new(0, 100, 0, 100)
+        imageLabel.Position = UDim2.new(0, 20, 0, 20)
+        imageLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Màu placeholder
+        imageLabel.Image = imageUrl -- URL hình ảnh từ config
+        imageLabel.Parent = frame
 
-    -- Script Name
-    local ScriptLabel = Instance.new("TextLabel")
-    ScriptLabel.Size = UDim2.new(0, 240, 0, 20)
-    ScriptLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 35)
-    ScriptLabel.BackgroundTransparency = 1
-    ScriptLabel.Text = "Loading Script [spin loading animation]"
-    ScriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ScriptLabel.TextScaled = true
-    ScriptLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ScriptLabel.Font = Enum.Font.SourceSans
-    ScriptLabel.Parent = MainFrame
-
-    -- Content (Name Script)
-    local ContentLabel = Instance.new("TextLabel")
-    ContentLabel.Size = UDim2.new(0, 240, 0, 20)
-    ContentLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 55)
-    ContentLabel.BackgroundTransparency = 1
-    ContentLabel.Text = "[" .. Title .. "]"
-    ContentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ContentLabel.TextScaled = true
-    ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ContentLabel.Font = Enum.Font.SourceSans
-    ContentLabel.Parent = MainFrame
-
-    -- Loading Bar Background
-    local BarFrame = Instance.new("Frame")
-    BarFrame.Size = UDim2.new(0, 280, 0, 10)
-    BarFrame.Position = UDim2.new(0, 10, 1, -20)
-    BarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    BarFrame.Parent = MainFrame
-
-    local BarCorner = Instance.new("UICorner")
-    BarCorner.CornerRadius = UDim.new(0, 5)
-    BarCorner.Parent = BarFrame
-
-    -- Loading Bar Fill
-    local BarFill = Instance.new("Frame")
-    BarFill.Size = UDim2.new(0, 0, 1, 0)
-    BarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    BarFill.Parent = BarFrame
-
-    local FillCorner = Instance.new("UICorner")
-    FillCorner.CornerRadius = UDim.new(0, 5)
-    FillCorner.Parent = BarFill
-
-    -- Percentage Text
-    local PercentLabel = Instance.new("TextLabel")
-    PercentLabel.Size = UDim2.new(0, 280, 0, 20)
-    PercentLabel.Position = UDim2.new(0, 10, 1, -40)
-    PercentLabel.BackgroundTransparency = 1
-    PercentLabel.Text = "0% [spin loading animation]"
-    PercentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    PercentLabel.TextScaled = true
-    PercentLabel.TextXAlignment = Enum.TextXAlignment.Center
-    PercentLabel.Font = Enum.Font.SourceSans
-    PercentLabel.Parent = MainFrame
-
-    -- Spin Loading Animation (dùng ImageLabel xoay)
-    local SpinIcon = Instance.new("ImageLabel")
-    SpinIcon.Size = UDim2.new(0, 20, 0, 20)
-    SpinIcon.Position = UDim2.new(0, 260, 1, -40)
-    SpinIcon.BackgroundTransparency = 1
-    SpinIcon.Image = "rbxassetid://6034833295" -- ID của một icon loading (bạn có thể thay đổi)
-    SpinIcon.Parent = MainFrame
-
-    -- Animation xoay cho SpinIcon
-    local function spinAnimation()
-        while MainFrame.Parent do
-            local tween = TweenService:Create(SpinIcon, TweenInfo.new(1, Enum.EasingStyle.Linear), {
-                Rotation = SpinIcon.Rotation + 360
-            })
-            tween:Play()
-            tween.Completed:Wait()
-        end
-    end
-
-    -- Animation xuất hiện
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -60)
-    MainFrame.BackgroundTransparency = 1
-    local fadeIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-        BackgroundTransparency = 0
-    })
-    fadeIn:Play()
-
-    -- Chạy animation loading từ 0% đến 100%
-    spawn(function()
-        spawn(spinAnimation) -- Bắt đầu animation xoay
-        for i = 0, 100 do
-            local percent = i / 100
-            local barSize = UDim2.new(percent, 0, 1, 0)
-            TweenService:Create(BarFill, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {
-                Size = barSize
-            }):Play()
-            PercentLabel.Text = tostring(i) .. "% [spin loading animation]"
-            wait(0.05) -- Tốc độ loading (có thể điều chỉnh)
+        -- Nếu không có hình ảnh, hiển thị placeholder text
+        if imageUrl == "" then
+            local placeholderText = Instance.new("TextLabel")
+            placeholderText.Size = UDim2.new(1, 0, 1, 0)
+            placeholderText.BackgroundTransparency = 1
+            placeholderText.Text = "IMAGE HERE"
+            placeholderText.TextColor3 = Color3.fromRGB(0, 0, 0)
+            placeholderText.TextScaled = true
+            placeholderText.Parent = imageLabel
         end
 
-        -- Animation biến mất
-        local fadeOut = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-            BackgroundTransparency = 1
-        })
-        fadeOut:Play()
-        fadeOut.Completed:Connect(function()
-            MainFrame:Destroy()
-        end)
-    end)
+        -- Tạo tiêu đề
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(0, 300, 0, 50)
+        titleLabel.Position = UDim2.new(0, 140, 0, 20)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = title
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.TextScaled = true
+        titleLabel.Font = Enum.Font.SourceSansBold
+        titleLabel.Parent = frame
+
+        -- Tạo tên script (subtitle)
+        local scriptLabel = Instance.new("TextLabel")
+        scriptLabel.Size = UDim2.new(0, 300, 0, 50)
+        scriptLabel.Position = UDim2.new(0, 140, 0, 70)
+        scriptLabel.BackgroundTransparency = 1
+        scriptLabel.Text = "Loading Script [spin loading animation]\n[" .. scriptName .. "]"
+        scriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        scriptLabel.TextScaled = true
+        scriptLabel.TextWrapped = true
+        scriptLabel.Font = Enum.Font.SourceSans
+        scriptLabel.Parent = frame
+
+        -- Tạo thanh tiến trình
+        local progressBar = Instance.new("Frame")
+        progressBar.Size = UDim2.new(0.8, 0, 0, 20)
+        progressBar.Position = UDim2.new(0.1, 0, 0.8, 0)
+        progressBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        progressBar.BorderSizePixel = 0
+        progressBar.Parent = frame
+
+        -- Tạo thanh tiến trình bên trong
+        local progressFill = Instance.new("Frame")
+        progressFill.Size = UDim2.new(0, 0, 1, 0) -- Ban đầu là 0%
+        progressFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        progressFill.BorderSizePixel = 0
+        progressFill.Parent = progressBar
+
+        -- Tạo nhãn phần trăm
+        local progressLabel = Instance.new("TextLabel")
+        progressLabel.Size = UDim2.new(0, 200, 0, 20)
+        progressLabel.Position = UDim2.new(0.5, -100, 0, -30)
+        progressLabel.BackgroundTransparency = 1
+        progressLabel.Text = "0% [spin loading animation]"
+        progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        progressLabel.TextScaled = true
+        progressLabel.Parent = progressBar
+
+        -- Tạo hiệu ứng tiến trình (giả lập loading)
+        local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+        local tween = TweenService:Create(progressFill, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)})
+        tween:Play()
+
+        -- Cập nhật nhãn phần trăm
+        local startTime = tick()
+        while tick() - startTime < 3 do
+            local elapsed = tick() - startTime
+            local percent = math.clamp(elapsed / 3, 0, 1) * 100
+            progressLabel.Text = math.floor(percent) .. "% [spin loading animation]"
+            task.wait()
+        end
+
+        -- Sau khi hoàn tất, xóa màn hình Loading
+        screenGui:Destroy()
+    end
 end
 
+-- Trả về thư viện
 return LoadingLib
