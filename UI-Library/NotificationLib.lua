@@ -17,21 +17,12 @@ end
 
 -- Danh sách để theo dõi các thông báo
 local activeNotifications = {}
--- Bảng để theo dõi số lần inject của cùng một thông báo
-local notificationInstances = {}
 
 function NotifyLib:Notification(config)
     local Title = config.Title or "Notification"
     local Content = config.Content or "Message here"
     local Image = config.Image or ""
     local Duration = config.Duration or 5
-    
-    -- Tạo key duy nhất cho notification dựa trên nội dung
-    local notifyKey = Title .. Content .. Image
-    
-    -- Đếm số lần inject của notification này
-    notificationInstances[notifyKey] = (notificationInstances[notifyKey] or 0) + 1
-    local instanceCount = notificationInstances[notifyKey]
     
     local ScreenGui = getScreenGui()
     local MainFrame = Instance.new("Frame")
@@ -59,7 +50,7 @@ function NotifyLib:Notification(config)
     Corner.CornerRadius = UDim.new(0, 10)
     Corner.Parent = NotifyFrame
     
-    -- Image (bên trái như SendNotification)
+    -- Image (giống SendNotification - bên trái)
     local Icon
     if Image ~= "" then
         Icon = Instance.new("ImageLabel")
@@ -117,28 +108,30 @@ function NotifyLib:Notification(config)
         end)
     end
     
-    -- Tính toán vị trí
+    -- Tính toán vị trí dựa trên các thông báo hiện có
     local function updatePositions()
         local offset = 50
         for i, notif in ipairs(activeNotifications) do
-            local targetPos = UDim2.new(1, -intrepeatable -320, 0, offset + (i-1) * 110)
-            TweenService:Create(notif.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                Position = targetPos
-            }):Play()
+            local targetPos = UDim2.new(1, -320, 0, offset + (i-1) * 110)
+            if notif.Frame.Position ~= targetPos then
+                TweenService:Create(notif.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                    Position = targetPos
+                }):Play()
+            end
         end
     end
     
     -- Animation
     local slideIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -320, 0, 50 + (instanceCount - 1) * 110)
+        Position = UDim2.new(1, -320, 0, 50)
     })
     
     local slideOut = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-        Position = UDim2.new(1, 320, 0, 50 + (instanceCount - 1) * 110)
+        Position = UDim2.new(1, 320, 0, 50)
     })
     
     -- Thêm vào danh sách thông báo
-    table.insert(activeNotifications, {Frame = MainFrame, Key = notifyKey})
+    table.insert(activeNotifications, {Frame = MainFrame})
     
     -- Chạy animation và cập nhật vị trí
     slideIn:Play()
@@ -160,12 +153,6 @@ function NotifyLib:Notification(config)
         for i, notif in ipairs(activeNotifications) do
             if notif.Frame == MainFrame then
                 table.remove(activeNotifications, i)
-                if notificationInstances[notif.Key] then
-                    notificationInstances[notif.Key] = notificationInstances[notif.Key] - 1
-                    if notificationInstances[notif.Key] <= 0 then
-                        notificationInstances[notif.Key] = nil
-                    end
-                end
                 break
             end
         end
