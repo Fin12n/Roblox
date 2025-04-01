@@ -152,12 +152,3 @@ function LoadingLib:CreateLoading(config)
     -- Sau khi hoàn tất, xóa màn hình Loading
     screenGui:Destroy()
 end
-
--- Gọi màn hình Loading
-LoadingLib:CreateLoading({
-    Title = "FINN HUB UI",
-    Image = "rbxassetid://1234567890", -- Thay bằng ID hình ảnh hợp lệ
-    ScriptName = "My Awesome Script"
-})
-
-print("Script loaded!")
