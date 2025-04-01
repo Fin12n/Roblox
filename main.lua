@@ -1,7 +1,7 @@
 local NotifyLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fin12n/Roblox/refs/heads/main/UI-Library/NotificationLib.lua"))
 local LoadingLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fin12n/Roblox/refs/heads/main/UI-Library/Loading.lua"))()
 
-if game.Placeid == "12716055617" then 
+if game.PlaceId == "12716055617" then 
     LoadingLib:CreateLoading({
         Title = "FINN HUB",
         Image = "rbxassetid://137595879440980", -- Thay bằng ID hình ảnh hợp lệ
@@ -15,7 +15,7 @@ if game.Placeid == "12716055617" then
         Duration = 5
     })
 end
-if game.Placeid == "286090429" then 
+if game.PlaceId == "286090429" then 
     LoadingLib:CreateLoading({
         Title = "FINN HUB",
         Image = "rbxassetid://79901055258586", -- Thay bằng ID hình ảnh hợp lệ
