@@ -28,6 +28,7 @@ function LoadingLib:CreateLoading(config)
     frame.Position = UDim2.new(0.5, -250, 0.5, -150) -- Đặt ở giữa màn hình
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu nền tối
     frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 1 -- Ẩn ban đầu
     frame.Parent = screenGui
 
     -- Bo góc cho Frame chính (UI)
@@ -35,18 +36,13 @@ function LoadingLib:CreateLoading(config)
     frameCorner.CornerRadius = UDim.new(0, 15) -- Bo góc 15 pixels
     frameCorner.Parent = frame
 
-    -- Animation In: Phóng to từ 0% lên 100%
-    frame.Size = UDim2.new(0, 0, 0, 0) -- Ban đầu thu nhỏ về 0
-    local inTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local inTween = TweenService:Create(frame, inTweenInfo, {Size = UDim2.new(0, 500, 0, 300)})
-    inTween:Play()
-
     -- Tạo ô hình ảnh (kích thước 80x80)
     local imageLabel = Instance.new("ImageLabel")
     imageLabel.Size = UDim2.new(0, 80, 0, 80)
     imageLabel.Position = UDim2.new(0, 10, 0, 10)
-    imageLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Màu placeholder
-    imageLabel.Image = imageUrl -- URL hình ảnh từ config
+    imageLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    imageLabel.Image = imageUrl
+    imageLabel.BackgroundTransparency = 1 -- Ẩn ban đầu
     imageLabel.Parent = frame
 
     -- Nếu không có hình ảnh, hiển thị placeholder text
@@ -57,6 +53,7 @@ function LoadingLib:CreateLoading(config)
         placeholderText.Text = "IMAGE HERE"
         placeholderText.TextColor3 = Color3.fromRGB(0, 0, 0)
         placeholderText.TextScaled = true
+        placeholderText.TextTransparency = 1 -- Ẩn ban đầu
         placeholderText.Parent = imageLabel
     end
 
@@ -69,6 +66,7 @@ function LoadingLib:CreateLoading(config)
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.TextScaled = true
     titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextTransparency = 1 -- Ẩn ban đầu
     titleLabel.Parent = frame
 
     -- Tạo tên script (subtitle)
@@ -81,6 +79,7 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.TextScaled = true
     scriptLabel.TextWrapped = true
     scriptLabel.Font = Enum.Font.SourceSans
+    scriptLabel.TextTransparency = 1 -- Ẩn ban đầu
     scriptLabel.Parent = frame
 
     -- Tạo thanh tiến trình
@@ -89,18 +88,20 @@ function LoadingLib:CreateLoading(config)
     progressBar.Position = UDim2.new(0, 10, 0, 260)
     progressBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     progressBar.BorderSizePixel = 0
+    progressBar.BackgroundTransparency = 1 -- Ẩn ban đầu
     progressBar.Parent = frame
 
     -- Bo góc cho thanh tiến trình
     local progressBarCorner = Instance.new("UICorner")
-    progressBarCorner.CornerRadius = UDim.new(0, 5) -- Bo góc 5 pixels
+    progressBarCorner.CornerRadius = UDim.new(0, 5)
     progressBarCorner.Parent = progressBar
 
     -- Tạo thanh tiến trình bên trong
     local progressFill = Instance.new("Frame")
     progressFill.Size = UDim2.new(0, 0, 1, 0) -- Ban đầu là 0%
-    progressFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150) -- Màu xám ban đầu
+    progressFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
     progressFill.BorderSizePixel = 0
+    progressFill.BackgroundTransparency = 1 -- Ẩn ban đầu
     progressFill.Parent = progressBar
 
     -- Bo góc cho thanh tiến trình bên trong
@@ -116,6 +117,7 @@ function LoadingLib:CreateLoading(config)
     progressLabel.Text = "0%"
     progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     progressLabel.TextScaled = true
+    progressLabel.TextTransparency = 1 -- Ẩn ban đầu
     progressLabel.Parent = progressBar
 
     -- Tạo spinner (vòng tròn các chấm quay)
@@ -136,28 +138,64 @@ function LoadingLib:CreateLoading(config)
         dot.Position = UDim2.new(0.5, math.cos(angle) * radius - dotSize / 2, 0.5, math.sin(angle) * radius - dotSize / 2)
         dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         dot.BorderSizePixel = 0
-        dot.BackgroundTransparency = 1
+        dot.BackgroundTransparency = 1 -- Ẩn ban đầu
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(1, 0)
         corner.Parent = dot
         dot.Parent = spinnerFrame
-
-        -- Tạo hiệu ứng sáng/tối
-        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * (1 / numDots))
-        local tween = TweenService:Create(dot, tweenInfo, {BackgroundTransparency = 0})
-        tween:Play()
     end
+
+    -- Animation In: Hiển thị Frame và các thành phần bên trong
+    local inTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local inTweenFrame = TweenService:Create(frame, inTweenInfo, {
+        Size = UDim2.new(0, 500, 0, 300),
+        BackgroundTransparency = 0
+    })
+    local inTweenImage = TweenService:Create(imageLabel, inTweenInfo, {BackgroundTransparency = 0})
+    local inTweenImageText = imageLabel:FindFirstChild("TextLabel") and TweenService:Create(imageLabel:FindFirstChild("TextLabel"), inTweenInfo, {TextTransparency = 0}) or nil
+    local inTweenTitle = TweenService:Create(titleLabel, inTweenInfo, {TextTransparency = 0})
+    local inTweenScript = TweenService:Create(scriptLabel, inTweenInfo, {TextTransparency = 0})
+    local inTweenProgressBar = TweenService:Create(progressBar, inTweenInfo, {BackgroundTransparency = 0})
+    local inTweenProgressFill = TweenService:Create(progressFill, inTweenInfo, {BackgroundTransparency = 0})
+    local inTweenProgressLabel = TweenService:Create(progressLabel, inTweenInfo, {TextTransparency = 0})
+
+    -- Hiển thị các chấm của spinner
+    for _, dot in pairs(spinnerFrame:GetChildren()) do
+        if dot:IsA("Frame") then
+            local dotTween = TweenService:Create(dot, inTweenInfo, {BackgroundTransparency = 0})
+            dotTween:Play()
+        end
+    end
+
+    -- Chạy Animation In
+    inTweenFrame:Play()
+    inTweenImage:Play()
+    if inTweenImageText then inTweenImageText:Play() end
+    inTweenTitle:Play()
+    inTweenScript:Play()
+    inTweenProgressBar:Play()
+    inTweenProgressFill:Play()
+    inTweenProgressLabel:Play()
 
     -- Tạo hiệu ứng quay cho spinner
     local rotationTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
     local rotationTween = TweenService:Create(spinnerFrame, rotationTweenInfo, {Rotation = 360})
     rotationTween:Play()
 
+    -- Tạo hiệu ứng sáng/tối cho các chấm của spinner
+    for i, dot in pairs(spinnerFrame:GetChildren()) do
+        if dot:IsA("Frame") then
+            local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * (1 / numDots))
+            local tween = TweenService:Create(dot, tweenInfo, {BackgroundTransparency = 0})
+            tween:Play()
+        end
+    end
+
     -- Tạo hiệu ứng tiến trình (thanh loading process)
     local fillTweenInfo = TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
     local fillTween = TweenService:Create(progressFill, fillTweenInfo, {
-        Size = UDim2.new(1, 0, 1, 0), -- Tăng kích thước từ 0% đến 100%
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Chuyển màu từ xám sang trắng
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     })
     fillTween:Play()
 
@@ -170,11 +208,40 @@ function LoadingLib:CreateLoading(config)
         task.wait()
     end
 
-    -- Animation Out: Thu nhỏ trước khi xóa
+    -- Animation Out: Ẩn Frame và các thành phần bên trong
     local outTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    local outTween = TweenService:Create(frame, outTweenInfo, {Size = UDim2.new(0, 0, 0, 0)})
-    outTween:Play()
-    outTween.Completed:Wait() -- Đợi animation hoàn tất
+    local outTweenFrame = TweenService:Create(frame, outTweenInfo, {
+        Size = UDim2.new(0, 0, 0, 0),
+        BackgroundTransparency = 1
+    })
+    local outTweenImage = TweenService:Create(imageLabel, outTweenInfo, {BackgroundTransparency = 1})
+    local outTweenImageText = imageLabel:FindFirstChild("TextLabel") and TweenService:Create(imageLabel:FindFirstChild("TextLabel"), outTweenInfo, {TextTransparency = 1}) or nil
+    local outTweenTitle = TweenService:Create(titleLabel, outTweenInfo, {TextTransparency = 1})
+    local outTweenScript = TweenService:Create(scriptLabel, outTweenInfo, {TextTransparency = 1})
+    local outTweenProgressBar = TweenService:Create(progressBar, outTweenInfo, {BackgroundTransparency = 1})
+    local outTweenProgressFill = TweenService:Create(progressFill, outTweenInfo, {BackgroundTransparency = 1})
+    local outTweenProgressLabel = TweenService:Create(progressLabel, outTweenInfo, {TextTransparency = 1})
+
+    -- Ẩn các chấm của spinner
+    for _, dot in pairs(spinnerFrame:GetChildren()) do
+        if dot:IsA("Frame") then
+            local dotTween = TweenService:Create(dot, outTweenInfo, {BackgroundTransparency = 1})
+            dotTween:Play()
+        end
+    end
+
+    -- Chạy Animation Out
+    outTweenFrame:Play()
+    outTweenImage:Play()
+    if outTweenImageText then outTweenImageText:Play() end
+    outTweenTitle:Play()
+    outTweenScript:Play()
+    outTweenProgressBar:Play()
+    outTweenProgressFill:Play()
+    outTweenProgressLabel:Play()
+
+    -- Đợi Animation Out hoàn tất
+    outTweenFrame.Completed:Wait()
 
     -- Xóa màn hình Loading
     screenGui:Destroy()
