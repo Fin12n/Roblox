@@ -3,15 +3,20 @@ local NotifyLib = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- Tạo GUI chính
-local function createNotification()
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    ScreenGui.Name = "SummerNotify"
-    ScreenGui.ResetOnSpawn = false
-    
+-- Tạo ScreenGui chung
+local ScreenGui
+local function getScreenGui()
+    if not ScreenGui then
+        ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "SummerNotify"
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
     return ScreenGui
 end
+
+-- Danh sách để theo dõi các thông báo
+local activeNotifications = {}
 
 function NotifyLib:Notification(config)
     local Title = config.Title or "Notification"
@@ -19,11 +24,10 @@ function NotifyLib:Notification(config)
     local Image = config.Image or ""
     local Duration = config.Duration or 5
     
-    -- Tạo container chính
-    local ScreenGui = createNotification()
+    local ScreenGui = getScreenGui()
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 300, 0, 100)
-    MainFrame.Position = UDim2.new(1, 320, 0, 50)
+    MainFrame.Position = UDim2.new(1, 320, 0, 50) -- Bắt đầu ngoài màn hình
     MainFrame.BackgroundTransparency = 1
     MainFrame.Parent = ScreenGui
     
@@ -46,49 +50,51 @@ function NotifyLib:Notification(config)
     Corner.CornerRadius = UDim.new(0, 10)
     Corner.Parent = NotifyFrame
     
+    -- Image (giống SendNotification - bên trái)
+    local Icon
+    if Image ~= "" then
+        Icon = Instance.new("ImageLabel")
+        Icon.Size = UDim2.new(0, 40, 0, 40)
+        Icon.Position = UDim2.new(0, 10, 0, 10)
+        Icon.BackgroundTransparency = 1
+        Icon.Image = "rbxassetid://" .. Image
+        Icon.Parent = NotifyFrame
+    end
+    
     -- Title
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(0.9, 0, 0, 25)
-    TitleLabel.Position = UDim2.new(0.05, 0, 0, 10)
+    TitleLabel.Size = UDim2.new(0, 240, 0, 25)
+    TitleLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 10)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = Title
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextScaled = true
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Font = Enum.Font.SourceSansBold
     TitleLabel.Parent = NotifyFrame
     
     -- Content
     local ContentLabel = Instance.new("TextLabel")
-    ContentLabel.Size = UDim2.new(0.9, 0, 0, 40)
-    ContentLabel.Position = UDim2.new(0.05, 0, 0, 40)
+    ContentLabel.Size = UDim2.new(0, 240, 0, 40)
+    ContentLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 40)
     ContentLabel.BackgroundTransparency = 1
     ContentLabel.Text = Content
     ContentLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
     ContentLabel.TextScaled = true
+    ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
     ContentLabel.Font = Enum.Font.SourceSans
     ContentLabel.Parent = NotifyFrame
-    
-    -- Image (nếu có)
-    if Image ~= "" then
-        local Icon = Instance.new("ImageLabel")
-        Icon.Size = UDim2.new(0, 40, 0, 40)
-        Icon.Position = UDim2.new(1, -50, 0, 10)
-        Icon.BackgroundTransparency = 1
-        Icon.Image = "rbxassetid://" .. Image
-        Icon.Parent = NotifyFrame
-    end
     
     -- Hiệu ứng mùa hạ: lá rơi
     local function createFallingLeaf()
         local Leaf = Instance.new("ImageLabel")
         Leaf.Size = UDim2.new(0, 15, 0, 15)
         Leaf.BackgroundTransparency = 1
-        Leaf.Image = "rbxassetid://131153409" -- ID lá mùa hạ
+        Leaf.Image = "rbxassetid://131153409"
         Leaf.Parent = NotifyFrame
         
         local startPos = UDim2.new(math.random(), 0, 0, -20)
         local endPos = UDim2.new(math.random(), 0, 1, 20)
-        
         Leaf.Position = startPos
         
         local tween = TweenService:Create(Leaf, TweenInfo.new(2, Enum.EasingStyle.Quad), {
@@ -102,7 +108,20 @@ function NotifyLib:Notification(config)
         end)
     end
     
-    -- Animation xuất hiện
+    -- Tính toán vị trí dựa trên các thông báo hiện có
+    local function updatePositions()
+        local offset = 50
+        for i, notif in ipairs(activeNotifications) do
+            local targetPos = UDim2.new(1, -320, 0, offset + (i-1) * 110)
+            if notif.Frame.Position ~= targetPos then
+                TweenService:Create(notif.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                    Position = targetPos
+                }):Play()
+            end
+        end
+    end
+    
+    -- Animation
     local slideIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
         Position = UDim2.new(1, -320, 0, 50)
     })
@@ -111,23 +130,38 @@ function NotifyLib:Notification(config)
         Position = UDim2.new(1, 320, 0, 50)
     })
     
-    -- Chạy animation
-    slideIn:Play()
+    -- Thêm vào danh sách thông báo
+    table.insert(activeNotifications, {Frame = MainFrame})
     
-    -- Tạo hiệu ứng lá rơi
+    -- Chạy animation và cập nhật vị trí
+    slideIn:Play()
+    updatePositions()
+    
+    -- Hiệu ứng lá rơi
     for i = 1, 3 do
         spawn(function()
             while wait(0.5) do
+                if not MainFrame.Parent then break end
                 createFallingLeaf()
             end
         end)
     end
     
-    -- Tự động xóa sau Duration
-    wait(Duration)
-    slideOut:Play()
-    slideOut.Completed:Connect(function()
-        ScreenGui:Destroy()
+    -- Xóa sau Duration
+    spawn(function()
+        wait(Duration)
+        for i, notif in ipairs(activeNotifications) do
+            if notif.Frame == MainFrame then
+                table.remove(activeNotifications, i)
+                break
+            end
+        end
+        
+        slideOut:Play()
+        slideOut.Completed:Connect(function()
+            MainFrame:Destroy()
+            updatePositions()
+        end)
     end)
 end
 
