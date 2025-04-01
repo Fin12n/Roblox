@@ -1,6 +1,4 @@
--- Script chính (trong Solara v3)
-
--- Nhúng mã LoadingLib trực tiếp
+-- LoadingLib.lua
 local LoadingLib = {}
 
 -- Dịch vụ cần thiết
@@ -32,9 +30,9 @@ function LoadingLib:CreateLoading(config)
     frame.BorderSizePixel = 0
     frame.Parent = screenGui
 
-    -- Tạo ô hình ảnh (thu nhỏ lại)
+    -- Tạo ô hình ảnh (kích thước 80x80)
     local imageLabel = Instance.new("ImageLabel")
-    imageLabel.Size = UDim2.new(0, 80, 0, 80) -- Thu nhỏ hình ảnh
+    imageLabel.Size = UDim2.new(0, 80, 0, 80)
     imageLabel.Position = UDim2.new(0, 10, 0, 10)
     imageLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Màu placeholder
     imageLabel.Image = imageUrl -- URL hình ảnh từ config
@@ -51,9 +49,9 @@ function LoadingLib:CreateLoading(config)
         placeholderText.Parent = imageLabel
     end
 
-    -- Tạo tiêu đề (điều chỉnh vị trí và kích thước)
+    -- Tạo tiêu đề
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(0, 400, 0, 40) -- Thu nhỏ để vừa Frame
+    titleLabel.Size = UDim2.new(0, 400, 0, 40)
     titleLabel.Position = UDim2.new(0, 100, 0, 10)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = title
@@ -62,9 +60,9 @@ function LoadingLib:CreateLoading(config)
     titleLabel.Font = Enum.Font.SourceSansBold
     titleLabel.Parent = frame
 
-    -- Tạo tên script (subtitle, điều chỉnh vị trí và kích thước)
+    -- Tạo tên script (subtitle)
     local scriptLabel = Instance.new("TextLabel")
-    scriptLabel.Size = UDim2.new(0, 400, 0, 60) -- Thu nhỏ để vừa Frame
+    scriptLabel.Size = UDim2.new(0, 400, 0, 60)
     scriptLabel.Position = UDim2.new(0, 100, 0, 50)
     scriptLabel.BackgroundTransparency = 1
     scriptLabel.Text = "Loading Script\n[" .. scriptName .. "]" -- Bỏ [spin loading animation]
@@ -74,10 +72,10 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.Font = Enum.Font.SourceSans
     scriptLabel.Parent = frame
 
-    -- Tạo thanh tiến trình (thu nhỏ lại)
+    -- Tạo thanh tiến trình
     local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(0, 480, 0, 15) -- Thu nhỏ để vừa Frame (480 pixels chiều rộng)
-    progressBar.Position = UDim2.new(0, 10, 0, 260) -- Đặt gần đáy Frame
+    progressBar.Size = UDim2.new(0, 480, 0, 15)
+    progressBar.Position = UDim2.new(0, 10, 0, 260)
     progressBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     progressBar.BorderSizePixel = 0
     progressBar.Parent = frame
@@ -89,42 +87,41 @@ function LoadingLib:CreateLoading(config)
     progressFill.BorderSizePixel = 0
     progressFill.Parent = progressBar
 
-    -- Tạo nhãn phần trăm (điều chỉnh vị trí)
+    -- Tạo nhãn phần trăm
     local progressLabel = Instance.new("TextLabel")
     progressLabel.Size = UDim2.new(0, 100, 0, 20)
-    progressLabel.Position = UDim2.new(0, 10, 0, -25) -- Đặt phía trên thanh tiến trình, bên trái
+    progressLabel.Position = UDim2.new(0, 10, 0, -25)
     progressLabel.BackgroundTransparency = 1
-    progressLabel.Text = "0%" -- Bỏ [spin loading animation]
+    progressLabel.Text = "0%"
     progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     progressLabel.TextScaled = true
     progressLabel.Parent = progressBar
 
     -- Tạo spinner (vòng tròn các chấm quay)
     local spinnerFrame = Instance.new("Frame")
-    spinnerFrame.Size = UDim2.new(0, 40, 0, 40) -- Kích thước spinner
-    spinnerFrame.Position = UDim2.new(1, -50, 0, -45) -- Đặt bên phải thanh tiến trình
+    spinnerFrame.Size = UDim2.new(0, 40, 0, 40)
+    spinnerFrame.Position = UDim2.new(1, -50, 0, -45)
     spinnerFrame.BackgroundTransparency = 1
     spinnerFrame.Parent = progressBar
 
     -- Tạo 8 chấm cho spinner
     local numDots = 8
-    local dotSize = 8 -- Kích thước mỗi chấm
-    local radius = 15 -- Bán kính vòng tròn spinner
+    local dotSize = 8
+    local radius = 15
     for i = 1, numDots do
-        local angle = (i - 1) * (2 * math.pi / numDots) -- Góc của mỗi chấm
+        local angle = (i - 1) * (2 * math.pi / numDots)
         local dot = Instance.new("Frame")
         dot.Size = UDim2.new(0, dotSize, 0, dotSize)
         dot.Position = UDim2.new(0.5, math.cos(angle) * radius - dotSize / 2, 0.5, math.sin(angle) * radius - dotSize / 2)
         dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         dot.BorderSizePixel = 0
-        dot.BackgroundTransparency = 1 -- Ban đầu ẩn
-        -- Làm tròn chấm
+        dot.BackgroundTransparency = 1
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(1, 0)
         corner.Parent = dot
         dot.Parent = spinnerFrame
 
-        -- Tạo hiệu ứng sáng/tối cho chấm
+        -- Tạo hiệu ứng sáng/tối
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * (1 / numDots))
         local tween = TweenService:Create(dot, tweenInfo, {BackgroundTransparency = 0})
         tween:Play()
@@ -135,7 +132,7 @@ function LoadingLib:CreateLoading(config)
     local rotationTween = TweenService:Create(spinnerFrame, rotationTweenInfo, {Rotation = 360})
     rotationTween:Play()
 
-    -- Tạo hiệu ứng tiến trình (giả lập loading)
+    -- Tạo hiệu ứng tiến trình
     local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
     local tween = TweenService:Create(progressFill, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)})
     tween:Play()
@@ -149,15 +146,9 @@ function LoadingLib:CreateLoading(config)
         task.wait()
     end
 
-    -- Sau khi hoàn tất, xóa màn hình Loading
+    -- Xóa màn hình Loading
     screenGui:Destroy()
 end
 
--- Gọi màn hình Loading
-LoadingLib:CreateLoading({
-    Title = "FINN HUB UI",
-    Image = "rbxassetid://1234567890", -- Thay bằng ID hình ảnh hợp lệ
-    ScriptName = "My Awesome Script"
-})
-
-print("Script loaded!")
+-- Trả về thư viện
+return LoadingLib
