@@ -9,7 +9,7 @@ function LoadingLib:CreateLoading(config)
     -- Kiểm tra config và gán giá trị mặc định
     config = config or {}
     local title = config.Title or "Default Title"
-    local imageUrl = config.Image or "" -- URL hình ảnh
+    local imageUrl = config.Image or "" -- URL hình ảnh hoặc ID Decal
     local scriptName = config.ScriptName or "Default Script"
 
     -- Tạo ScreenGui (trong môi trường exploit, sử dụng PlayerGui của LocalPlayer)
@@ -24,16 +24,16 @@ function LoadingLib:CreateLoading(config)
 
     -- Tạo Frame chính (kích thước 500x300)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 500, 0, 300) -- Kích thước 500x300 pixels
+    frame.Size = UDim2.new(0, 0, 0, 0) -- Ban đầu thu nhỏ về 0 để animation In
     frame.Position = UDim2.new(0.5, -250, 0.5, -150) -- Đặt ở giữa màn hình
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu nền tối
     frame.BorderSizePixel = 0
-    frame.BackgroundTransparency = 1 -- Ẩn ban đầu
+    frame.BackgroundTransparency = 0 -- Không ẩn Frame chính
     frame.Parent = screenGui
 
     -- Bo góc cho Frame chính (UI)
     local frameCorner = Instance.new("UICorner")
-    frameCorner.CornerRadius = UDim.new(0, 15) -- Bo góc 15 pixels
+    frameCorner.CornerRadius = UDim.new(0, 20) -- Bo góc 20 pixels
     frameCorner.Parent = frame
 
     -- Tạo ô hình ảnh (kích thước 80x80)
@@ -41,9 +41,19 @@ function LoadingLib:CreateLoading(config)
     imageLabel.Size = UDim2.new(0, 80, 0, 80)
     imageLabel.Position = UDim2.new(0, 10, 0, 10)
     imageLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    imageLabel.Image = imageUrl
+    -- Kiểm tra xem imageUrl có phải là URL ngoài hay ID Decal
+    if imageUrl:match("^http") then
+        imageLabel.Image = imageUrl -- URL ngoài (nếu môi trường exploit cho phép)
+    else
+        imageLabel.Image = imageUrl -- ID Decal (rbxassetid://ID)
+    end
     imageLabel.BackgroundTransparency = 1 -- Ẩn ban đầu
     imageLabel.Parent = frame
+
+    -- Bo góc cho ô hình ảnh
+    local imageCorner = Instance.new("UICorner")
+    imageCorner.CornerRadius = UDim.new(0, 25) -- Bo góc 25 pixels
+    imageCorner.Parent = imageLabel
 
     -- Nếu không có hình ảnh, hiển thị placeholder text
     if imageUrl == "" then
@@ -65,7 +75,7 @@ function LoadingLib:CreateLoading(config)
     titleLabel.Text = title
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.TextScaled = true
-    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.Font = Enum.Font.GothamBlack -- Font chữ dày dặn, bo góc
     titleLabel.TextTransparency = 1 -- Ẩn ban đầu
     titleLabel.Parent = frame
 
@@ -78,7 +88,7 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     scriptLabel.TextScaled = true
     scriptLabel.TextWrapped = true
-    scriptLabel.Font = Enum.Font.SourceSans
+    scriptLabel.Font = Enum.Font.Gotham -- Font chữ bo góc
     scriptLabel.TextTransparency = 1 -- Ẩn ban đầu
     scriptLabel.Parent = frame
 
@@ -117,6 +127,7 @@ function LoadingLib:CreateLoading(config)
     progressLabel.Text = "0%"
     progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     progressLabel.TextScaled = true
+    progressLabel.Font = Enum.Font.Gotham -- Font chữ bo góc
     progressLabel.TextTransparency = 1 -- Ẩn ban đầu
     progressLabel.Parent = progressBar
 
@@ -148,8 +159,7 @@ function LoadingLib:CreateLoading(config)
     -- Animation In: Hiển thị Frame và các thành phần bên trong
     local inTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local inTweenFrame = TweenService:Create(frame, inTweenInfo, {
-        Size = UDim2.new(0, 500, 0, 300),
-        BackgroundTransparency = 0
+        Size = UDim2.new(0, 500, 0, 300)
     })
     local inTweenImage = TweenService:Create(imageLabel, inTweenInfo, {BackgroundTransparency = 0})
     local inTweenImageText = imageLabel:FindFirstChild("TextLabel") and TweenService:Create(imageLabel:FindFirstChild("TextLabel"), inTweenInfo, {TextTransparency = 0}) or nil
@@ -211,8 +221,7 @@ function LoadingLib:CreateLoading(config)
     -- Animation Out: Ẩn Frame và các thành phần bên trong
     local outTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
     local outTweenFrame = TweenService:Create(frame, outTweenInfo, {
-        Size = UDim2.new(0, 0, 0, 0),
-        BackgroundTransparency = 1
+        Size = UDim2.new(0, 0, 0, 0)
     })
     local outTweenImage = TweenService:Create(imageLabel, outTweenInfo, {BackgroundTransparency = 1})
     local outTweenImageText = imageLabel:FindFirstChild("TextLabel") and TweenService:Create(imageLabel:FindFirstChild("TextLabel"), outTweenInfo, {TextTransparency = 1}) or nil
