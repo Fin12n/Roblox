@@ -84,7 +84,7 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.Size = UDim2.new(0, 400, 0, 60)
     scriptLabel.Position = UDim2.new(0, 100, 0, 50)
     scriptLabel.BackgroundTransparency = 1
-    scriptLabel.Text = "Loading Script\n[" .. scriptName .. "]"
+    scriptLabel.Text = "Loading Script\n" .. scriptName .. ""
     scriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     scriptLabel.TextScaled = true
     scriptLabel.TextWrapped = true
