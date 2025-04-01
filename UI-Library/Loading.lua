@@ -75,7 +75,7 @@ function LoadingLib:CreateLoading(config)
     titleLabel.Text = title
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.TextScaled = true
-    titleLabel.Font = Enum.Font.GothamBlack -- Font chữ dày dặn, bo góc
+    titleLabel.Font = Enum.Font.FredokaOne -- Font bo góc, dày dặn, vui tươi
     titleLabel.TextTransparency = 1 -- Ẩn ban đầu
     titleLabel.Parent = frame
 
@@ -88,7 +88,7 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     scriptLabel.TextScaled = true
     scriptLabel.TextWrapped = true
-    scriptLabel.Font = Enum.Font.Gotham -- Font chữ bo góc
+    scriptLabel.Font = Enum.Font.Bangers -- Font bo góc, phong cách comic
     scriptLabel.TextTransparency = 1 -- Ẩn ban đầu
     scriptLabel.Parent = frame
 
@@ -127,7 +127,7 @@ function LoadingLib:CreateLoading(config)
     progressLabel.Text = "0%"
     progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     progressLabel.TextScaled = true
-    progressLabel.Font = Enum.Font.Gotham -- Font chữ bo góc
+    progressLabel.Font = Enum.Font.Bangers -- Font bo góc, phong cách comic
     progressLabel.TextTransparency = 1 -- Ẩn ban đầu
     progressLabel.Parent = progressBar
 
