@@ -1,150 +1,163 @@
--- NotifyLib Module Script
+-- NotifyLib by Claude
+-- A complete notification library that can be executed in any Roblox game
+
 local NotifyLib = {}
 
 -- Constants
 local GRADIENT_COLOR_1 = Color3.fromRGB(188, 202, 163) -- #bccaa3
 local GRADIENT_COLOR_2 = Color3.fromRGB(107, 128, 180) -- #6b80b4
 local DEFAULT_DURATION = 5
-local DEFAULT_TEXT_COLOR = Color3.fromRGB(255, 255, 255)
-local DEFAULT_TEXT_SIZE = 14
-local DEFAULT_TITLE_SIZE = 16
 local ANIMATION_DURATION = 0.5
 
--- Create base UI elements
-local function createBaseUI()
-    local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    
-    -- Check if the NotificationSystem already exists
-    local existingSystem = PlayerGui:FindFirstChild("NotificationSystem")
-    if existingSystem then
-        return existingSystem
+-- Initialize UI
+local function InitializeUI()
+    local player = game.Players.LocalPlayer
+    if not player then
+        repeat wait() player = game.Players.LocalPlayer until player
     end
     
-    -- Create new notification system
-    local NotificationSystem = Instance.new("ScreenGui")
-    NotificationSystem.Name = "NotificationSystem"
-    NotificationSystem.ResetOnSpawn = false
-    NotificationSystem.Parent = PlayerGui
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if not playerGui then
+        repeat wait() playerGui = player:FindFirstChild("PlayerGui") until playerGui
+    end
     
-    return NotificationSystem
+    -- Check if NotifySystem already exists
+    local notifySystem = playerGui:FindFirstChild("NotifySystem")
+    
+    if not notifySystem then
+        notifySystem = Instance.new("ScreenGui")
+        notifySystem.Name = "NotifySystem"
+        notifySystem.ResetOnSpawn = false
+        notifySystem.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        notifySystem.Parent = playerGui
+        
+        -- Create notification container
+        local notificationsFrame = Instance.new("Frame")
+        notificationsFrame.Name = "NotificationsFrame"
+        notificationsFrame.BackgroundTransparency = 1
+        notificationsFrame.Size = UDim2.new(1, 0, 1, 0)
+        notificationsFrame.Position = UDim2.new(0, 0, 0, 0)
+        notificationsFrame.Parent = notifySystem
+    end
+    
+    return playerGui:FindFirstChild("NotifySystem")
 end
 
--- Load image from ID or URL
-local function loadImage(imageSource)
+-- Get or create image from ID or URL
+local function GetImageFromSource(imageSource)
     -- Default image if none provided
     if not imageSource or imageSource == "" then
         return "rbxassetid://4914902889" -- Default notification icon
     end
     
-    -- If it's an ID (number or string starting with "rbxassetid://")
+    -- Handle different image formats
     if tonumber(imageSource) then
         return "rbxassetid://" .. imageSource
     elseif string.find(imageSource, "rbxassetid://") then
         return imageSource
     else
-        -- Assume it's a URL (Note: Roblox might not allow external URLs)
+        -- Assume it's a URL
         return imageSource
     end
 end
 
+-- Main notification function
 function NotifyLib:Notification(options)
-    -- Default parameters and validate options
     options = options or {}
+    
+    -- Default values
     local title = options.Title or "Notification"
     local content = options.Content or ""
-    local image = loadImage(options.Image)
+    local imageSource = GetImageFromSource(options.Image)
     local duration = options.Duration or DEFAULT_DURATION
     
-    -- Create base UI if it doesn't exist
-    local notificationSystem = createBaseUI()
+    -- Initialize UI if not already done
+    local notifySystem = InitializeUI()
+    local notificationsFrame = notifySystem:FindFirstChild("NotificationsFrame")
     
-    -- Create notification container
-    local notificationContainer = Instance.new("Frame")
-    notificationContainer.Name = "NotificationContainer"
-    notificationContainer.Size = UDim2.new(0, 300, 0, 80)
-    notificationContainer.Position = UDim2.new(1, 10, 0.75, 0) -- Start off-screen to the right
-    notificationContainer.BackgroundTransparency = 0
-    notificationContainer.BorderSizePixel = 0
-    notificationContainer.BackgroundColor3 = GRADIENT_COLOR_1
-    notificationContainer.ZIndex = 10
-    notificationContainer.Parent = notificationSystem
+    -- Create notification
+    local notification = Instance.new("Frame")
+    notification.Name = "Notification_" .. tostring(os.time())
+    notification.Size = UDim2.new(0, 300, 0, 80)
+    notification.Position = UDim2.new(1, 10, 0.75, 0) -- Start off-screen
+    notification.BackgroundColor3 = GRADIENT_COLOR_1
+    notification.BorderSizePixel = 0
+    notification.AnchorPoint = Vector2.new(0, 0)
+    notification.Parent = notificationsFrame
     
     -- Add corner radius
     local cornerRadius = Instance.new("UICorner")
     cornerRadius.CornerRadius = UDim.new(0, 8)
-    cornerRadius.Parent = notificationContainer
+    cornerRadius.Parent = notification
     
-    -- Create gradient
+    -- Add gradient
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, GRADIENT_COLOR_1),
         ColorSequenceKeypoint.new(1, GRADIENT_COLOR_2)
     })
     gradient.Rotation = 45
-    gradient.Parent = notificationContainer
+    gradient.Parent = notification
     
-    -- Create icon image
-    local iconImage = Instance.new("ImageLabel")
-    iconImage.Name = "Icon"
-    iconImage.Size = UDim2.new(0, 50, 0, 50)
-    iconImage.Position = UDim2.new(0, 15, 0, 15)
-    iconImage.BackgroundTransparency = 1
-    iconImage.Image = image
-    iconImage.ScaleType = Enum.ScaleType.Fit
-    iconImage.ZIndex = 11
-    iconImage.Parent = notificationContainer
-    
-    -- Create title label
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -80, 0, 25)
-    titleLabel.Position = UDim2.new(0, 75, 0, 10)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.TextColor3 = DEFAULT_TEXT_COLOR
-    titleLabel.TextSize = DEFAULT_TITLE_SIZE
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Text = title
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextWrapped = true
-    titleLabel.ZIndex = 11
-    titleLabel.Parent = notificationContainer
-    
-    -- Create content label
-    local contentLabel = Instance.new("TextLabel")
-    contentLabel.Name = "Content"
-    contentLabel.Size = UDim2.new(1, -80, 0, 40)
-    contentLabel.Position = UDim2.new(0, 75, 0, 35)
-    contentLabel.BackgroundTransparency = 1
-    contentLabel.TextColor3 = DEFAULT_TEXT_COLOR
-    contentLabel.TextSize = DEFAULT_TEXT_SIZE
-    contentLabel.Font = Enum.Font.Gotham
-    contentLabel.Text = content
-    contentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    contentLabel.TextYAlignment = Enum.TextYAlignment.Top
-    contentLabel.TextWrapped = true
-    contentLabel.ZIndex = 11
-    contentLabel.Parent = notificationContainer
-    
-    -- Create a shadow effect
+    -- Add shadow
     local shadow = Instance.new("ImageLabel")
     shadow.Name = "Shadow"
     shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     shadow.BackgroundTransparency = 1
     shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
     shadow.Size = UDim2.new(1, 20, 1, 20)
-    shadow.ZIndex = 9
+    shadow.ZIndex = notification.ZIndex - 1
     shadow.Image = "rbxassetid://1316045217"
     shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
     shadow.ImageTransparency = 0.6
     shadow.ScaleType = Enum.ScaleType.Slice
     shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    shadow.Parent = notificationContainer
+    shadow.Parent = notification
     
-    -- Gradient animation
+    -- Create icon
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Size = UDim2.new(0, 50, 0, 50)
+    icon.Position = UDim2.new(0, 15, 0, 15)
+    icon.BackgroundTransparency = 1
+    icon.Image = imageSource
+    icon.ScaleType = Enum.ScaleType.Fit
+    icon.Parent = notification
+    
+    -- Create title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Size = UDim2.new(1, -80, 0, 25)
+    titleLabel.Position = UDim2.new(0, 75, 0, 10)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 16
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Text = title
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextWrapped = true
+    titleLabel.Parent = notification
+    
+    -- Create content
+    local contentLabel = Instance.new("TextLabel")
+    contentLabel.Name = "Content"
+    contentLabel.Size = UDim2.new(1, -80, 0, 40)
+    contentLabel.Position = UDim2.new(0, 75, 0, 35)
+    contentLabel.BackgroundTransparency = 1
+    contentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    contentLabel.TextSize = 14
+    contentLabel.Font = Enum.Font.Gotham
+    contentLabel.Text = content
+    contentLabel.TextXAlignment = Enum.TextXAlignment.Left
+    contentLabel.TextYAlignment = Enum.TextYAlignment.Top
+    contentLabel.TextWrapped = true
+    contentLabel.Parent = notification
+    
+    -- Animate gradient
     spawn(function()
-        while notificationContainer.Parent do
+        while notification and notification.Parent do
             for i = 0, 360, 1 do
-                if notificationContainer.Parent then
+                if notification and notification.Parent then
                     gradient.Rotation = i
                     wait(0.03)
                 else
@@ -158,9 +171,9 @@ function NotifyLib:Notification(options)
     local tweenService = game:GetService("TweenService")
     local entranceTweenInfo = TweenInfo.new(ANIMATION_DURATION, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     
-    local entranceTween = tweenService:Create(notificationContainer, entranceTweenInfo, {
-        Position = UDim2.new(0.98, -10, 0.75, 0), -- Anchor point to right side of screen
-        AnchorPoint = Vector2.new(1, 0) -- Right edge anchored
+    local entranceTween = tweenService:Create(notification, entranceTweenInfo, {
+        Position = UDim2.new(0.98, -10, 0.75, 0),
+        AnchorPoint = Vector2.new(1, 0)
     })
     
     entranceTween:Play()
@@ -171,12 +184,12 @@ function NotifyLib:Notification(options)
         
         local exitTweenInfo = TweenInfo.new(ANIMATION_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
         
-        local exitTween = tweenService:Create(notificationContainer, exitTweenInfo, {
-            Position = UDim2.new(1.1, 0, 0.75, 0), -- Move off screen to the right
+        local exitTween = tweenService:Create(notification, exitTweenInfo, {
+            Position = UDim2.new(1.1, 0, 0.75, 0),
             BackgroundTransparency = 1
         })
         
-        local textExitTween = tweenService:Create(titleLabel, exitTweenInfo, {
+        local titleExitTween = tweenService:Create(titleLabel, exitTweenInfo, {
             TextTransparency = 1
         })
         
@@ -184,7 +197,7 @@ function NotifyLib:Notification(options)
             TextTransparency = 1
         })
         
-        local iconExitTween = tweenService:Create(iconImage, exitTweenInfo, {
+        local iconExitTween = tweenService:Create(icon, exitTweenInfo, {
             ImageTransparency = 1
         })
         
@@ -193,25 +206,27 @@ function NotifyLib:Notification(options)
         })
         
         exitTween:Play()
-        textExitTween:Play()
+        titleExitTween:Play()
         contentExitTween:Play()
         iconExitTween:Play()
         shadowExitTween:Play()
         
         exitTween.Completed:Connect(function()
-            notificationContainer:Destroy()
+            notification:Destroy()
         end)
     end)
     
-    return notificationContainer
+    return notification
 end
 
--- Handle multiple notifications to stack them properly
-local activeNotifications = {}
-
--- Override to match requested API style
+-- Alternative syntax support
 function NotifyLib.Notification(options)
     return NotifyLib:Notification(options)
 end
+
+-- Simple initialization to make sure PlayerGui exists
+spawn(function()
+    InitializeUI()
+end)
 
 return NotifyLib
