@@ -18,7 +18,7 @@ end
 if game.Placeid == "286090429" then 
     LoadingLib:CreateLoading({
         Title = "FINN HUB",
-        Image = "rbxassetid://137595879440980", -- Thay bằng ID hình ảnh hợp lệ
+        Image = "rbxassetid://79901055258586", -- Thay bằng ID hình ảnh hợp lệ
         ScriptName = "Arsenal Menu"
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Fin12n/Roblox/refs/heads/main/Script/Arsenal.lua"))
