@@ -30,6 +30,17 @@ function LoadingLib:CreateLoading(config)
     frame.BorderSizePixel = 0
     frame.Parent = screenGui
 
+    -- Bo góc cho Frame chính (UI)
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.CornerRadius = UDim.new(0, 15) -- Bo góc 15 pixels
+    frameCorner.Parent = frame
+
+    -- Animation In: Phóng to từ 0% lên 100%
+    frame.Size = UDim2.new(0, 0, 0, 0) -- Ban đầu thu nhỏ về 0
+    local inTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local inTween = TweenService:Create(frame, inTweenInfo, {Size = UDim2.new(0, 500, 0, 300)})
+    inTween:Play()
+
     -- Tạo ô hình ảnh (kích thước 80x80)
     local imageLabel = Instance.new("ImageLabel")
     imageLabel.Size = UDim2.new(0, 80, 0, 80)
@@ -65,7 +76,7 @@ function LoadingLib:CreateLoading(config)
     scriptLabel.Size = UDim2.new(0, 400, 0, 60)
     scriptLabel.Position = UDim2.new(0, 100, 0, 50)
     scriptLabel.BackgroundTransparency = 1
-    scriptLabel.Text = "Loading Script\n[" .. scriptName .. "]" -- Bỏ [spin loading animation]
+    scriptLabel.Text = "Loading Script\n[" .. scriptName .. "]"
     scriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     scriptLabel.TextScaled = true
     scriptLabel.TextWrapped = true
@@ -80,12 +91,22 @@ function LoadingLib:CreateLoading(config)
     progressBar.BorderSizePixel = 0
     progressBar.Parent = frame
 
+    -- Bo góc cho thanh tiến trình
+    local progressBarCorner = Instance.new("UICorner")
+    progressBarCorner.CornerRadius = UDim.new(0, 5) -- Bo góc 5 pixels
+    progressBarCorner.Parent = progressBar
+
     -- Tạo thanh tiến trình bên trong
     local progressFill = Instance.new("Frame")
     progressFill.Size = UDim2.new(0, 0, 1, 0) -- Ban đầu là 0%
-    progressFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    progressFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150) -- Màu xám ban đầu
     progressFill.BorderSizePixel = 0
     progressFill.Parent = progressBar
+
+    -- Bo góc cho thanh tiến trình bên trong
+    local progressFillCorner = Instance.new("UICorner")
+    progressFillCorner.CornerRadius = UDim.new(0, 5)
+    progressFillCorner.Parent = progressFill
 
     -- Tạo nhãn phần trăm
     local progressLabel = Instance.new("TextLabel")
@@ -132,10 +153,13 @@ function LoadingLib:CreateLoading(config)
     local rotationTween = TweenService:Create(spinnerFrame, rotationTweenInfo, {Rotation = 360})
     rotationTween:Play()
 
-    -- Tạo hiệu ứng tiến trình
-    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-    local tween = TweenService:Create(progressFill, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)})
-    tween:Play()
+    -- Tạo hiệu ứng tiến trình (thanh loading process)
+    local fillTweenInfo = TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+    local fillTween = TweenService:Create(progressFill, fillTweenInfo, {
+        Size = UDim2.new(1, 0, 1, 0), -- Tăng kích thước từ 0% đến 100%
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Chuyển màu từ xám sang trắng
+    })
+    fillTween:Play()
 
     -- Cập nhật nhãn phần trăm
     local startTime = tick()
@@ -145,6 +169,12 @@ function LoadingLib:CreateLoading(config)
         progressLabel.Text = math.floor(percent) .. "%"
         task.wait()
     end
+
+    -- Animation Out: Thu nhỏ trước khi xóa
+    local outTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    local outTween = TweenService:Create(frame, outTweenInfo, {Size = UDim2.new(0, 0, 0, 0)})
+    outTween:Play()
+    outTween.Completed:Wait() -- Đợi animation hoàn tất
 
     -- Xóa màn hình Loading
     screenGui:Destroy()
