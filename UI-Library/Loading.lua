@@ -1,184 +1,162 @@
-local LoadingLib = {}
+local NotifyLib = {}
 
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Tạo ScreenGui chung
 local ScreenGui
 local function getScreenGui()
     if not ScreenGui then
         ScreenGui = Instance.new("ScreenGui")
-        ScreenGui.Name = "LoadingGui"
+        ScreenGui.Name = "SummerNotify"
         ScreenGui.ResetOnSpawn = false
         ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     end
     return ScreenGui
 end
 
-function LoadingLib:CreateLoading(config)
-    local Title = config.Title or "Loading Script"
-    local Content = config.Content or "Loading..."
-    local Image = config.Image or "" -- URL của hình ảnh
-    local ProgressCallback = config.ProgressCallback or function() return 100 end -- Callback để lấy tiến độ
+local activeNotifications = {}
+local notificationInstances = {}
+
+function NotifyLib:Notification(config)
+    local Title = config.Title or "Notification"
+    local Content = config.Content or "Message here"
+    local Image = config.Image or ""
+    local Duration = config.Duration or 5
+
+    local notifyKey = Title .. Content .. Image
+    notificationInstances[notifyKey] = (notificationInstances[notifyKey] or 0) + 1
+    local instanceCount = notificationInstances[notifyKey]
 
     local ScreenGui = getScreenGui()
     local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 300, 0, 120)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -60) -- Giữa màn hình
-    MainFrame.BackgroundTransparency = 0
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Nền đen
+    MainFrame.Size = UDim2.new(0, 300, 0, 100)
+    MainFrame.Position = UDim2.new(1, 320, 0, 50)
+    MainFrame.BackgroundTransparency = 1
     MainFrame.Parent = ScreenGui
 
-    -- Corner
+    local NotifyFrame = Instance.new("Frame")
+    NotifyFrame.Size = UDim2.new(1, 0, 1, 0)
+    NotifyFrame.BackgroundTransparency = 0.1
+    NotifyFrame.Parent = MainFrame
+
+    local Gradient = Instance.new("UIGradient")
+    Gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromHex("#bccaa3")),
+        ColorSequenceKeypoint.new(1, Color3.fromHex("#6b80b4"))
+    })
+    Gradient.Rotation = 45
+    Gradient.Parent = NotifyFrame
+
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = MainFrame
+    Corner.Parent = NotifyFrame
 
-    -- Image (bên trái)
     local Icon
     if Image ~= "" then
         Icon = Instance.new("ImageLabel")
         Icon.Size = UDim2.new(0, 40, 0, 40)
         Icon.Position = UDim2.new(0, 10, 0, 10)
         Icon.BackgroundTransparency = 1
-        Icon.Image = Image -- Sử dụng URL hình ảnh
-        Icon.Parent = MainFrame
+        Icon.Image = "rbxassetid://" .. Image
+        Icon.Parent = NotifyFrame
     end
 
-    -- Title (FINN HUB UI)
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(0, 240, 0, 20)
+    TitleLabel.Size = UDim2.new(0, 240, 0, 25)
     TitleLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 10)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "FINN HUB UI"
+    TitleLabel.Text = Title
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextScaled = true
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Font = Enum.Font.SourceSansBold
-    TitleLabel.Parent = MainFrame
+    TitleLabel.Parent = NotifyFrame
 
-    -- Script Name
-    local ScriptLabel = Instance.new("TextLabel")
-    ScriptLabel.Size = UDim2.new(0, 240, 0, 20)
-    ScriptLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 35)
-    ScriptLabel.BackgroundTransparency = 1
-    ScriptLabel.Text = "Loading Script [spin loading animation]"
-    ScriptLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ScriptLabel.TextScaled = true
-    ScriptLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ScriptLabel.Font = Enum.Font.SourceSans
-    ScriptLabel.Parent = MainFrame
-
-    -- Content (Name Script)
     local ContentLabel = Instance.new("TextLabel")
-    ContentLabel.Size = UDim2.new(0, 240, 0, 20)
-    ContentLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 55)
+    ContentLabel.Size = UDim2.new(0, 240, 0, 40)
+    ContentLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 40)
     ContentLabel.BackgroundTransparency = 1
-    ContentLabel.Text = "[" .. Title .. "]"
-    ContentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ContentLabel.Text = Content
+    ContentLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
     ContentLabel.TextScaled = true
     ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
     ContentLabel.Font = Enum.Font.SourceSans
-    ContentLabel.Parent = MainFrame
+    ContentLabel.Parent = NotifyFrame
 
-    -- Loading Bar Background
-    local BarFrame = Instance.new("Frame")
-    BarFrame.Size = UDim2.new(0, 280, 0, 10)
-    BarFrame.Position = UDim2.new(0, 10, 1, -20)
-    BarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    BarFrame.Parent = MainFrame
+    local function createFallingLeaf()
+        local Leaf = Instance.new("ImageLabel")
+        Leaf.Size = UDim2.new(0, 15, 0, 15)
+        Leaf.BackgroundTransparency = 1
+        Leaf.Image = "rbxassetid://131153409"
+        Leaf.Parent = NotifyFrame
 
-    local BarCorner = Instance.new("UICorner")
-    BarCorner.CornerRadius = UDim.new(0, 5)
-    BarCorner.Parent = BarFrame
+        local startPos = UDim2.new(math.random(), 0, 0, -20)
+        local endPos = UDim2.new(math.random(), 0, 1, 20)
+        Leaf.Position = startPos
 
-    -- Loading Bar Fill
-    local BarFill = Instance.new("Frame")
-    BarFill.Size = UDim2.new(0, 0, 1, 0)
-    BarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    BarFill.Parent = BarFrame
+        local tween = TweenService:Create(Leaf, TweenInfo.new(2, Enum.EasingStyle.Quad), {
+            Position = endPos,
+            Rotation = math.random(-180, 180)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            Leaf:Destroy()
+        end)
+    end
 
-    local FillCorner = Instance.new("UICorner")
-    FillCorner.CornerRadius = UDim.new(0, 5)
-    FillCorner.Parent = BarFill
-
-    -- Percentage Text
-    local PercentLabel = Instance.new("TextLabel")
-    PercentLabel.Size = UDim2.new(0, 280, 0, 20)
-    PercentLabel.Position = UDim2.new(0, 10, 1, -40)
-    PercentLabel.BackgroundTransparency = 1
-    PercentLabel.Text = "0% [spin loading animation]"
-    PercentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    PercentLabel.TextScaled = true
-    PercentLabel.TextXAlignment = Enum.TextXAlignment.Center
-    PercentLabel.Font = Enum.Font.SourceSans
-    PercentLabel.Parent = MainFrame
-
-    -- Spin Loading Animation (dùng ImageLabel xoay)
-    local SpinIcon = Instance.new("ImageLabel")
-    SpinIcon.Size = UDim2.new(0, 20, 0, 20)
-    SpinIcon.Position = UDim2.new(0, 260, 1, -40)
-    SpinIcon.BackgroundTransparency = 1
-    SpinIcon.Image = "rbxassetid://6034833295" -- ID của một icon loading
-    SpinIcon.Parent = MainFrame
-
-    -- Animation xoay cho SpinIcon
-    local function spinAnimation()
-        while MainFrame.Parent do
-            local tween = TweenService:Create(SpinIcon, TweenInfo.new(1, Enum.EasingStyle.Linear), {
-                Rotation = SpinIcon.Rotation + 360
-            })
-            tween:Play()
-            tween.Completed:Wait()
+    local function updatePositions()
+        local offset = 50
+        for i, notif in ipairs(activeNotifications) do
+            local targetPos = UDim2.new(1, -320, 0, offset + (i-1) * 110)
+            TweenService:Create(notif.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                Position = targetPos
+            }):Play()
         end
     end
 
-    -- Animation xuất hiện
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -60)
-    MainFrame.BackgroundTransparency = 1
-    local fadeIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-        BackgroundTransparency = 0
+    local slideIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -320, 0, 50 + (instanceCount - 1) * 110)
     })
-    fadeIn:Play()
 
-    -- Cập nhật tiến độ loading theo callback
-    spawn(function()
-        spawn(spinAnimation) -- Bắt đầu animation xoay
-        local lastPercent = 0
-        while true do
-            local percent = ProgressCallback() -- Lấy giá trị từ callback
-            percent = math.clamp(percent, 0, 100) -- Đảm bảo giá trị từ 0-100
+    local slideOut = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+        Position = UDim2.new(1, 320, 0, 50 + (instanceCount - 1) * 110)
+    })
 
-            -- Cập nhật thanh loading
-            local barSize = UDim2.new(percent / 100, 0, 1, 0)
-            TweenService:Create(BarFill, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {
-                Size = barSize
-            }):Play()
-            PercentLabel.Text = tostring(math.floor(percent)) .. "% [spin loading animation]"
+    table.insert(activeNotifications, {Frame = MainFrame, Key = notifyKey})
+    slideIn:Play()
+    updatePositions()
 
-            -- Kiểm tra nếu đạt 100%
-            if percent >= 100 then
-                break
+    for i = 1, 3 do
+        spawn(function()
+            while wait(0.5) do
+                if not MainFrame.Parent then break end
+                createFallingLeaf()
             end
+        end)
+    end
 
-            -- Chỉ cập nhật nếu giá trị thay đổi
-            if percent == lastPercent then
-                wait(0.1) -- Giảm tải CPU nếu không có thay đổi
-            else
-                lastPercent = percent
-                wait(0.05) -- Tốc độ cập nhật khi có thay đổi
+    spawn(function()
+        wait(Duration)
+        for i, notif in ipairs(activeNotifications) do
+            if notif.Frame == MainFrame then
+                table.remove(activeNotifications, i)
+                if notificationInstances[notif.Key] then
+                    notificationInstances[notif.Key] = notificationInstances[notif.Key] - 1
+                    if notificationInstances[notif.Key] <= 0 then
+                        notificationInstances[notif.Key] = nil
+                    end
+                end
+                break
             end
         end
 
-        -- Animation biến mất
-        local fadeOut = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-            BackgroundTransparency = 1
-        })
-        fadeOut:Play()
-        fadeOut.Completed:Connect(function()
+        slideOut:Play()
+        slideOut.Completed:Connect(function()
             MainFrame:Destroy()
+            updatePositions()
         end)
     end)
 end
 
-return LoadingLib
+return NotifyLib
