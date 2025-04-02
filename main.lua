@@ -24,7 +24,7 @@ if game.PlaceId == 286090429 then
         Image = "rbxassetid://79901055258586", -- Thay bằng ID hình ảnh hợp lệ
         ScriptName = "Arsenal Menu"
     })
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Fin12n/Roblox/refs/heads/main/Script/Emden.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Fin12n/Roblox/refs/heads/main/Script/Arsenal.lua"))()
 game.StarterGui:SetCore("SendNotification", {
     Title = "Game Detected ❗";
     Text = "Arsenal"; -- what the text says (ofc)
