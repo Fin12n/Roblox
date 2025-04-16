@@ -17,8 +17,7 @@ game.StarterGui:SetCore("SendNotification", {
     Text = "Have Fun!"; -- what the text says (ofc)
     Duration = 15;
 })
-end
-if game.PlaceId == 286090429 then
+elseif game.PlaceId == 286090429 then
     LoadingLib:CreateLoading({
         Title = "Finnn HUB",
         Image = "rbxassetid://79901055258586", -- Thay bằng ID hình ảnh hợp lệ
@@ -35,4 +34,5 @@ game.StarterGui:SetCore("SendNotification", {
     Text = "Have Fun!"; -- what the text says (ofc)
     Duration = 15;
 })
+end
 end
