@@ -35,7 +35,7 @@ BG.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
 BG.BackgroundTransparency = 0.300
 BG.BorderColor3 = Color3.fromRGB(0, 0, 0)
 BG.BorderSizePixel = 0
-BG.Position = UDim2.new(2, 0, 0.852484345, 0)
+BG.Position = UDim2.new(5,0,5,0)
 BG.Size = UDim2.new(0, 250, 0, 100)
 
 UICorner.Parent = BG
@@ -78,7 +78,7 @@ local durationgoal = { Size = UDim2.new(0,0,0,4) }
 
 local whennoptify = { Position = UDim2.new(0.862950981, 0, 0.852484345, 0) }
 
-local notnotify = { Position = UDim2.new(2, 0, 0.852484345, 0) }
+local notnotify = { Position = UDim2.new(5,0,5,0) }
 
 local tweeninfo = TweenInfo.new(
 	0.5,
@@ -91,7 +91,11 @@ local notnotifytween = TweenService:Create(BG, tweeninfo, notnotify)
 
 -- Notify Function
 
+
 function notify(title, message, duration)
+	if duration == nil then
+		duration = 3
+	end
 	local durationinfo = TweenInfo.new(
 		duration,
 		Enum.EasingStyle.Linear,
