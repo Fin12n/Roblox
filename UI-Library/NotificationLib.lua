@@ -92,7 +92,7 @@ local notnotifytween = TweenService:Create(BG, tweeninfo, notnotify)
 -- Notify Function
 
 
-function notify(title, message, duration)
+function NotifyLib.notify(title, message, duration) -- Changed to NotifyLib.notify
 	if duration == nil then
 		duration = 3
 	end
