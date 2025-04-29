@@ -1,168 +1,111 @@
 local NotifyLib = {}
+-- Gui to Lua
+-- Version: 3.2
 
+-- Game Services
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local lp = Players.LocalPlayer
+local playergui = lp:WaitForChild("PlayerGui")
 
--- Tạo ScreenGui chung
-local ScreenGui
-local function getScreenGui()
-    if not ScreenGui then
-        ScreenGui = Instance.new("ScreenGui")
-        ScreenGui.Name = "SummerNotify"
-        ScreenGui.ResetOnSpawn = false
-        ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    end
-    return ScreenGui
-end
+-- Varibles
 
--- Danh sách để theo dõi các thông báo
-local activeNotifications = {}
 
-function NotifyLib:Notification(config)
-    local Title = config.Title or "Notification"
-    local Content = config.Content or "Message here"
-    local Image = config.Image or ""
-    local Duration = config.Duration or 5
-    
-    local ScreenGui = getScreenGui()
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 300, 0, 100)
-    MainFrame.Position = UDim2.new(1, 320, 0, 50) -- Bắt đầu ngoài màn hình
-    MainFrame.BackgroundTransparency = 1
-    MainFrame.Parent = ScreenGui
-    
-    -- Gradient Background
-    local NotifyFrame = Instance.new("Frame")
-    NotifyFrame.Size = UDim2.new(1, 0, 1, 0)
-    NotifyFrame.BackgroundTransparency = 0.1
-    NotifyFrame.Parent = MainFrame
-    
-    local Gradient = Instance.new("UIGradient")
-    Gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHex("#bccaa3")),
-        ColorSequenceKeypoint.new(1, Color3.fromHex("#6b80b4"))
-    })
-    Gradient.Rotation = 45
-    Gradient.Parent = NotifyFrame
-    
-    -- Corner
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = NotifyFrame
-    
-    -- Image (giống SendNotification - bên trái)
-    local Icon
-    if Image ~= "" then
-        Icon = Instance.new("ImageLabel")
-        Icon.Size = UDim2.new(0, 40, 0, 40)
-        Icon.Position = UDim2.new(0, 10, 0, 10)
-        Icon.BackgroundTransparency = 1
-        Icon.Image = "rbxassetid://" .. Image
-        Icon.Parent = NotifyFrame
-    end
-    
-    -- Title
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(0, 240, 0, 25)
-    TitleLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 10)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = Title
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextScaled = true
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Font = Enum.Font.SourceSansBold
-    TitleLabel.Parent = NotifyFrame
-    
-    -- Content
-    local ContentLabel = Instance.new("TextLabel")
-    ContentLabel.Size = UDim2.new(0, 240, 0, 40)
-    ContentLabel.Position = UDim2.new(0, Image ~= "" and 60 or 10, 0, 40)
-    ContentLabel.BackgroundTransparency = 1
-    ContentLabel.Text = Content
-    ContentLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-    ContentLabel.TextScaled = true
-    ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ContentLabel.Font = Enum.Font.SourceSans
-    ContentLabel.Parent = NotifyFrame
-    
-    -- Hiệu ứng mùa hạ: lá rơi
-    local function createFallingLeaf()
-        local Leaf = Instance.new("ImageLabel")
-        Leaf.Size = UDim2.new(0, 15, 0, 15)
-        Leaf.BackgroundTransparency = 1
-        Leaf.Image = "rbxassetid://131153409"
-        Leaf.Parent = NotifyFrame
-        
-        local startPos = UDim2.new(math.random(), 0, 0, -20)
-        local endPos = UDim2.new(math.random(), 0, 1, 20)
-        Leaf.Position = startPos
-        
-        local tween = TweenService:Create(Leaf, TweenInfo.new(2, Enum.EasingStyle.Quad), {
-            Position = endPos,
-            Rotation = math.random(-180, 180)
-        })
-        
-        tween:Play()
-        tween.Completed:Connect(function()
-            Leaf:Destroy()
-        end)
-    end
-    
-    -- Tính toán vị trí dựa trên các thông báo hiện có
-    local function updatePositions()
-        local offset = 50
-        for i, notif in ipairs(activeNotifications) do
-            local targetPos = UDim2.new(1, -320, 0, offset + (i-1) * 110)
-            if notif.Frame.Position ~= targetPos then
-                TweenService:Create(notif.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                    Position = targetPos
-                }):Play()
-            end
-        end
-    end
-    
-    -- Animation
-    local slideIn = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -320, 0, 50)
-    })
-    
-    local slideOut = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-        Position = UDim2.new(1, 320, 0, 50)
-    })
-    
-    -- Thêm vào danh sách thông báo
-    table.insert(activeNotifications, {Frame = MainFrame})
-    
-    -- Chạy animation và cập nhật vị trí
-    slideIn:Play()
-    updatePositions()
-    
-    -- Hiệu ứng lá rơi
-    for i = 1, 3 do
-        spawn(function()
-            while wait(0.5) do
-                if not MainFrame.Parent then break end
-                createFallingLeaf()
-            end
-        end)
-    end
-    
-    -- Xóa sau Duration
-    spawn(function()
-        wait(Duration)
-        for i, notif in ipairs(activeNotifications) do
-            if notif.Frame == MainFrame then
-                table.remove(activeNotifications, i)
-                break
-            end
-        end
-        
-        slideOut:Play()
-        slideOut.Completed:Connect(function()
-            MainFrame:Destroy()
-            updatePositions()
-        end)
-    end)
+
+-- Instances:
+
+local Notify = Instance.new("ScreenGui")
+local BG = Instance.new("Frame")
+local Line = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local Content = Instance.new("TextLabel")
+
+--Properties:
+
+Notify.Name = "Notify"
+Notify.Parent = playergui
+Notify.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+BG.Name = "BG"
+BG.Parent = Notify
+BG.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+BG.BackgroundTransparency = 0.300
+BG.BorderColor3 = Color3.fromRGB(0, 0, 0)
+BG.BorderSizePixel = 0
+BG.Position = UDim2.new(2, 0, 0.852484345, 0)
+BG.Size = UDim2.new(0, 250, 0, 100)
+
+UICorner.Parent = BG
+
+Title.Name = "Title"
+Title.Parent = BG
+Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1.000
+Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Title.BorderSizePixel = 0
+Title.Position = UDim2.new(0, 0, -0.0799999982, 0)
+Title.Size = UDim2.new(0, 250, 0, 50)
+Title.Font = Enum.Font.Bangers
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20.000
+
+Content.Name = "Content"
+Content.Parent = BG
+Content.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Content.BackgroundTransparency = 1.000
+Content.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Content.BorderSizePixel = 0
+Content.Position = UDim2.new(0, 0, 0.25, 0)
+Content.Size = UDim2.new(0, 264, 0, 75)
+Content.Font = Enum.Font.LuckiestGuy
+Content.TextColor3 = Color3.fromRGB(255, 255, 255)
+Content.TextSize = 14.000
+
+Line.Name = "Line"
+Line.Parent = BG
+Line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Line.BorderSizePixel = 0
+Line.Position = UDim2.new(0, 0, 0.959999979, 0)
+Line.Size = UDim2.new(0, 251, 0, 4)
+
+-- Tween Service
+
+local durationgoal = { Size = UDim2.new(0,0,0,4) }
+
+local whennoptify = { Position = UDim2.new(0.862950981, 0, 0.852484345, 0) }
+
+local notnotify = { Position = UDim2.new(2, 0, 0.852484345, 0) }
+
+local tweeninfo = TweenInfo.new(
+	0.5,
+	Enum.EasingStyle.Linear,
+	Enum.EasingDirection.InOut
+)
+
+local notifyTween = TweenService:Create(BG, tweeninfo, whennoptify)
+local notnotifytween = TweenService:Create(BG, tweeninfo, notnotify)
+
+-- Notify Function
+
+function notify(title, message, duration)
+	local durationinfo = TweenInfo.new(
+		duration,
+		Enum.EasingStyle.Linear,
+		Enum.EasingDirection.InOut
+	)
+	local durationtween = TweenService:Create(Line, durationinfo, durationgoal)
+	Title.Text = title
+	Content.Text = message
+	notifyTween:Play()
+	durationtween:Play()
+	task.wait(duration)
+	notnotifytween:Play()
+	task.wait(duration)
+	Notify:Destroy()
 end
 
 return NotifyLib
