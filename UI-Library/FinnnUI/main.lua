@@ -571,7 +571,6 @@
     end
     
     return Window
-end
 
 -- Settings Saver Integration (Placeholder for future implementation)
 Fin12nLib.Settings = {
